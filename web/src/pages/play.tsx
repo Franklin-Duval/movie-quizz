@@ -1,7 +1,7 @@
 import { Wrapper } from "../components/Wrapper";
 import { withUrqlClient } from "next-urql";
 import { createUrqlClient } from "../utils/createUrqlClient";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Heading } from "@chakra-ui/react";
 import { Timer } from "../components/Timer";
 import { Dialog } from "../components/Modal";
@@ -11,6 +11,25 @@ const PlayPage = () => {
   const [start, setStart] = useState(false);
   const [finish, setFinish] = useState(false);
   const [score, setScore] = useState(0);
+  const [previousScore, setPreviousScore] = useState(0);
+
+  useEffect(() => {
+    setPreviousScore(Number(localStorage.getItem("score") || 0));
+  }, []);
+
+  const endGame = () => {
+    setFinish(true);
+  };
+
+  const resetGame = () => {
+    setFinish(false);
+    setStart(false);
+    setScore(0);
+    if (score > previousScore) {
+      localStorage.setItem("score", score.toString());
+      setPreviousScore(score);
+    }
+  };
 
   return (
     <Wrapper>
@@ -21,11 +40,8 @@ const PlayPage = () => {
           </Button>
         ) : (
           <>
-            <Timer onFinish={() => setFinish(true)} />
-            <Quizz
-              onFinish={() => setFinish(true)}
-              addScore={() => setScore(score + 1)}
-            />
+            <Timer onFinish={endGame} />
+            <Quizz onFinish={endGame} addScore={() => setScore(score + 1)} />
           </>
         )}
 
@@ -42,16 +58,12 @@ const PlayPage = () => {
               {score}
             </Heading>
 
-            <Button
-              colorScheme="blue"
-              onClick={() => {
-                setFinish(false);
-                setStart(false);
-                setScore(0);
-              }}
-            >
+            <Button colorScheme="blue" onClick={resetGame}>
               Rejouer
             </Button>
+            <p>
+              Meilleur score: {score > previousScore ? score : previousScore}
+            </p>
           </div>
         </Dialog>
       </div>
